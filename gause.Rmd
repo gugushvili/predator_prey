@@ -55,7 +55,7 @@ glimpse(gause_fig3) # Quick check
 Data are in long format. The data frame contains three variables:
 
 - `Time`: Day of the experiment
-- `Species`: Names of the two species, `Paramecium aurelia` (predator) and `Schizosaccharomyces pombe` (prey)
+- `Species`: Names of the two species, `Paramecium aurelia` (predator) and `Saccharomyces exiguus` (prey)
 - `Individuals`: Number of individuals
 
 ## Some plots
