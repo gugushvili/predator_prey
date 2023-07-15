@@ -1,0 +1,151 @@
+---
+title: "Data for predator-prey interaction"
+author: "Shota Gugushvili"
+date: July 15, 2023
+output:
+  tufte::tufte_html: default
+  tufte::tufte_handout: default
+bibliography: bib.bib
+link-citations: true
+---
+
+## Summary
+
+This note deals with a real dataset describing the predator-prey interaction.
+
+## Source
+
+Data come from  [@gause35]. I extracted it by reading the point coordinates off Figure 3. To that end I used a handy tool called WebPlotDigitizer, see [@rohatgi2022]. Graphical quality of the original figure is modest, and I rounded off numbers to one digit after zero. Data are in principle daily, but for some reason days 12 and 14 did not appear in the graph. Perhaps Gause partied the night before and did not show up in the lab next morning. 
+
+Gause presents, among others, results of an experiment on interaction of two species: *Paramecium aurelia* (predator)^[*Paramecium aurelia* is a protozoan.] and *Saccharomyces exiguus* (prey)^[*Saccharomyces exiguus* is a yeast.]. For details of the experiment, refer to the original paper. Being lab data obtained under controlled conditions, this dataset is not problematic to employ unlike the notorious and widely used Canadian lynx-hare dataset. You can download the latter, e.g., from Douglas Hundley's page [here](http://people.whitman.edu/~hundledr/courses/M250F03/M250.html). Read also his comments on the dataset^[The page was still functioning on July 15, 2023].
+
+## Preliminaries
+
+Load packages and fix settings.
+
+```{r, warning=FALSE, message=FALSE}
+## Packages
+
+library(tidyverse) # Data manipulation
+
+library(ggplot2) # Plotting
+library(viridis) # Colour schemes
+library(hrbrthemes) # Plotting themes
+
+library(gauseR) # Some other predator-prey data
+
+## Plot settings
+
+# Fonts required for hrbrthemes:
+# https://github.com/hrbrmstr/hrbrthemes/tree/master/inst/fonts/roboto-condensed
+
+theme_set(hrbrthemes::theme_ipsum_rc(grid = "XY"))
+```
+
+## Data
+
+Read in the data.
+
+```{r}
+gause_fig3 <- read_csv(file = "gause_fig3.csv") # Load data
+
+glimpse(gause_fig3) # Quick check
+```
+
+Data are in long format. The data frame contains three variables:
+
+- `Time`: Day of the experiment
+- `Species`: Names of the two species, `Paramecium aurelia` (predator) and `Schizosaccharomyces pombe` (prey)
+- `Individuals`: Number of individuals
+
+## Some plots
+
+Data can be visualised in a single panel as below.
+
+```{r}
+# Plot with points
+
+gause_fig3 %>%
+  ggplot() +
+  geom_point(aes(x = Time, y = Individuals, colour = Species)) +
+  scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom") +
+  ylab("Concentration") +
+  xlab("Time") 
+```
+
+You can also use lines instead of points. This looks rough due to low time resolution of the data, but simplifies seeing periodic patterns. Note the typical fluctuations, whose period is approximately constant. Gause remarks that the *Paramecium* mortality rate is somewhat high due to slight deficiency of oxygen in this experiment.
+
+```{r}
+# Plot with lines
+
+gause_fig3 %>%
+  ggplot() +
+  geom_line(aes(x = Time, y = Individuals, colour = Species)) +
+  scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom") +
+  ylab("Concentration") +
+  xlab("Time") 
+```
+
+Facetting by species is a possibility too.
+
+```{r}
+## Points
+
+gause_fig3 %>%
+  ggplot() +
+  geom_point(aes(x = Time, y = Individuals)) +
+  facet_wrap(~ Species, nrow = 2) +
+  ylab("Concentration") +
+  xlab("Time") 
+```
+
+
+Another option is to plot in the XY-plane the concentration of the predator against the concentration of the prey.
+
+```{r}
+# Convert data to wide format
+
+gause_fig3_wide <- gause_fig3 %>%
+  pivot_wider(names_from = Species, values_from = Individuals)
+
+glimpse(gause_fig3_wide)
+
+gause_fig3_wide %>%
+  ggplot() +
+  geom_path(aes(y = `Saccharomyces exiguus`, x = `Paramecium aurelia`, colour = Time),
+            arrow = arrow()) +
+  scale_colour_viridis(option = "rocket") +
+  xlab("Paramecium aurelia") +
+  ylab("Saccharomyces exiguus")
+```
+
+Magnitude of fluctuations varies somewhat, but not too much. Things could have been worse when compared to Gause's another experiment (that dataset is included the **gauseR** package). 
+
+```{r}
+gause_1934_book_f39.1 %>%
+  ggplot() +
+  geom_line(aes(x = Time, y = Individuals, colour = Species)) +
+  scale_color_viridis(discrete = TRUE) +
+  theme(legend.position = "bottom") +
+  ylab("Concentration") +
+  xlab("Time") 
+```
+
+
+```{r}
+gause_1934_book_f39.1_wide <- gause_1934_book_f39.1 %>%
+  pivot_wider(names_from = Species, values_from = Individuals)
+
+glimpse(gause_1934_book_f39.1_wide)
+
+gause_1934_book_f39.1_wide %>%
+  ggplot() +
+  geom_path(aes(y = `Schizosaccharomyces pombe`, x = `Paramecium bursaria`, colour = Time),
+            arrow = arrow()) +
+  scale_colour_viridis(option = "rocket") +
+  xlab("Paramecium bursaria") +
+  ylab("Schizosaccharomyces pombe")
+```
+
